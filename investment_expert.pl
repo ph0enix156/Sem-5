@@ -1,4 +1,3 @@
-
 risk(low).
 risk(medium).
 risk(high).
@@ -15,14 +14,11 @@ recommend(high, growth, stocks).
 recommend(high, income, dividend_stocks).
 
 start :-
-    write('Enter your risk level : '),
+    write('Enter your risk level: '),
     read(Risk),
-    
-    write('Enter your investment goal : '),
+    write('Enter your investment goal: '),
     read(Goal),
-
     recommend(Risk, Goal, Investment),
-
     write('Recommended investment: '),
     write(Investment),
     nl.

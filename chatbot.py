@@ -1,9 +1,18 @@
 
+# Code 7: NLP Chatbot using Python and NLTK
+
+# Install these libraries in the VS Code terminal:
+# python -m pip install nltk
+# python -m pip install newspaper3k
+# python -m pip install lxml_html_clean
+
+# Import libraries
 import nltk
 from newspaper import Article
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 
+# Download required NLTK datasets
 nltk.download('punkt')
 nltk.download('punkt_tab')
 nltk.download('stopwords')
