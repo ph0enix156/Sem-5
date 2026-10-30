@@ -1,0 +1,15 @@
+enable
+configure terminal
+
+interface fastEthernet 0/0
+ip address 192.168.1.2 255.255.255.0
+no shutdown
+exit
+
+interface fastEthernet 1/0
+ip address 192.168.2.1 255.255.255.0
+ip helper-address 192.168.1.1
+no shutdown
+exit
+
+end
