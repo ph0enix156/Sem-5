@@ -1,0 +1,444 @@
+------------------------hamming---------------------------
+
+# Hamming Code (7,4) - Error Detection and Correction
+
+data = input("Enter 4-bit data: ")
+
+if len(data) != 4 or any(bit not in "01" for bit in data):
+    print("Please enter exactly 4 binary bits.")
+else:
+    # Positions are numbered from 1 to 7
+    h = [0] * 8
+
+    # Place data bits
+    h[3] = int(data[0])
+    h[5] = int(data[1])
+    h[6] = int(data[2])
+    h[7] = int(data[3])
+
+    # Calculate even parity bits
+    h[1] = h[3] ^ h[5] ^ h[7]
+    h[2] = h[3] ^ h[6] ^ h[7]
+    h[4] = h[5] ^ h[6] ^ h[7]
+
+    code = ''.join(str(h[i]) for i in range(1, 8))
+
+    print("Transmitted code:", code)
+
+    # Introduce an error
+    error = int(input("Enter error position (1-7): "))
+
+    if error < 1 or error > 7:
+        print("Invalid error position.")
+    else:
+        h[error] ^= 1
+
+        received = ''.join(str(h[i]) for i in range(1, 8))
+        print("Received code:", received)
+
+        # Calculate syndrome bits
+        s1 = h[1] ^ h[3] ^ h[5] ^ h[7]
+        s2 = h[2] ^ h[3] ^ h[6] ^ h[7]
+        s4 = h[4] ^ h[5] ^ h[6] ^ h[7]
+
+        error_position = s4 * 4 + s2 * 2 + s1
+
+        print("Error position:", error_position)
+
+        # Correct the error
+        if error_position != 0:
+            h[error_position] ^= 1
+
+        corrected = ''.join(str(h[i]) for i in range(1, 8))
+
+        print("Corrected code:", corrected)
+
+        # Extract original data
+        original = ''.join(str(h[i]) for i in [3, 5, 6, 7])
+        print("Original data:", original)
+
+
+
+
+
+------------------------subnetting--------------------------
+
+import math
+
+# Input
+prefix = int(input("Enter original prefix (e.g. 24): "))
+subnets = int(input("Enter required number of subnets: "))
+
+# Calculate borrowed bits
+borrowed_bits = math.ceil(math.log2(subnets))
+
+# Calculate new prefix
+new_prefix = prefix + borrowed_bits
+
+if prefix < 0 or prefix > 30 or subnets < 1 or new_prefix > 30:
+    print("Invalid network prefix or subnet requirement.")
+
+else:
+    # Calculate host bits
+    host_bits = 32 - new_prefix
+
+    # Calculate usable hosts
+    usable_hosts = (2 ** host_bits) - 2
+
+    # Calculate subnet mask
+    mask_bits = "1" * new_prefix + "0" * host_bits
+
+    octets = [
+        int(mask_bits[i:i+8], 2)
+        for i in range(0, 32, 8)
+    ]
+
+    subnet_mask = ".".join(map(str, octets))
+
+    # Display results
+    print("\n--- Subnetting Results ---")
+    print("Original Prefix: /", prefix)
+    print("Required Subnets:", subnets)
+    print("Borrowed Bits:", borrowed_bits)
+    print("New Prefix: /", new_prefix)
+    print("Subnet Mask:", subnet_mask)
+    print("Usable Hosts per Subnet:", usable_hosts)
+
+
+----------------------------dist vector--------------------------------
+
+# Distance Vector Routing Algorithm
+
+INF = float('inf')
+
+# Input number of routers
+n = int(input("Enter number of routers: "))
+
+# Input cost matrix
+print("Enter cost matrix (-1 for no direct connection):")
+
+cost = []
+
+for i in range(n):
+    row = list(map(int, input().split()))
+
+    for j in range(n):
+        if row[j] == -1:
+            row[j] = INF
+
+    cost.append(row)
+
+# Initialize distance and next-hop tables
+dist = [row[:] for row in cost]
+
+next_hop = []
+
+for i in range(n):
+    row = []
+    for j in range(n):
+        if i != j and cost[i][j] != INF:
+            row.append(j)
+        else:
+            row.append(None)
+    next_hop.append(row)
+
+# Distance Vector algorithm
+while True:
+    old_dist = [row[:] for row in dist]
+    updated = [row[:] for row in dist]
+    changed = False
+
+    for i in range(n):
+        for j in range(n):
+            for v in range(n):
+
+                if i != v and cost[i][v] != INF:
+                    new_cost = cost[i][v] + old_dist[v][j]
+
+                    if new_cost < updated[i][j]:
+                        updated[i][j] = new_cost
+                        next_hop[i][j] = v
+                        changed = True
+
+    dist = updated
+
+    if not changed:
+        break
+
+# Display final routing table
+print("\nFinal Routing Tables:")
+
+for i in range(n):
+    print("\nRouter", chr(65 + i))
+    print("Destination  Cost  Next Hop")
+
+    for j in range(n):
+        if dist[i][j] == INF:
+            print(chr(65+j), "         INF   -")
+        elif i == j:
+            print(chr(65+j), "         0     -")
+        else:
+            print(chr(65+j), "        ", int(dist[i][j]),
+                  "   ", chr(65 + next_hop[i][j]))
+
+# Find shortest path
+src = int(input("\nEnter source router (0=A, 1=B, 2=C): "))
+dest = int(input("Enter destination router: "))
+
+if dist[src][dest] == INF:
+    print("No path exists")
+
+else:
+    path = [src]
+    current = src
+
+    while current != dest:
+        current = next_hop[current][dest]
+        path.append(current)
+
+    print("Shortest Path:",
+          " -> ".join(chr(65 + x) for x in path))
+
+    print("Total Cost:", int(dist[src][dest]))
+
+
+
+
+
+-----------------tcp msg----------------------
+server ----->
+
+import socket
+
+# Create TCP socket
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Bind server to IP and port
+server.bind(("127.0.0.1", 5000))
+
+# Listen for client connections
+server.listen(1)
+print("Server is waiting for a connection...")
+
+# Accept client connection
+conn, addr = server.accept()
+print("Connected to:", addr)
+
+# Receive message from client
+message = conn.recv(1024).decode()
+print("Message from client:", message)
+
+# Close connection
+conn.close()
+server.close()
+
+
+
+client ----->
+
+import socket
+
+# Create TCP socket
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Connect to server
+client.connect(("127.0.0.1", 5000))
+
+# Send message
+message = input("Enter a message: ")
+client.send(message.encode())
+
+print("Message sent successfully!")
+
+# Close connection
+client.close()
+
+
+
+
+
+----------------------tcp Calculator--------------------------
+server ------------>
+
+import socket
+
+# Create TCP socket
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Bind IP address and port
+server.bind(("127.0.0.1", 5000))
+
+# Listen for client
+server.listen(1)
+print("Server is waiting for connection...")
+
+# Accept client connection
+conn, addr = server.accept()
+print("Connected to:", addr)
+
+# Receive data from client
+data = conn.recv(1024).decode()
+
+# Split received data
+num1, num2, operator = data.split(",")
+
+num1 = float(num1)
+num2 = float(num2)
+
+# Perform calculation
+if operator == "+":
+    result = num1 + num2
+elif operator == "-":
+    result = num1 - num2
+elif operator == "*":
+    result = num1 * num2
+elif operator == "/":
+    if num2 != 0:
+        result = num1 / num2
+    else:
+        result = "Cannot divide by zero"
+else:
+    result = "Invalid operator"
+
+print("Result:", result)
+
+# Send result back to client
+conn.send(str(result).encode())
+
+# Close connection
+conn.close()
+server.close()
+
+
+
+client --------->
+
+import socket
+
+# Create TCP socket
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Connect to server
+client.connect(("127.0.0.1", 5000))
+
+# Take input from user
+num1 = input("Enter first number: ")
+num2 = input("Enter second number: ")
+operator = input("Enter operator (+, -, *, /): ")
+
+# Send data to server
+message = num1 + "," + num2 + "," + operator
+client.send(message.encode())
+
+# Receive result from server
+result = client.recv(1024).decode()
+
+print("Result from server:", result)
+
+# Close connection
+client.close()
+
+
+
+
+---------------------udp-----------------------
+server ------>
+
+import socket
+
+# Create UDP socket
+server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# Bind server to IP and port
+server.bind(("127.0.0.1", 5000))
+
+print("UDP Server is waiting for messages...")
+
+# Receive message from client
+data, addr = server.recvfrom(1024)
+
+message = data.decode()
+print("Message from client:", message)
+
+# Convert to uppercase
+result = message.upper()
+
+# Send result back to client
+server.sendto(result.encode(), addr)
+
+print("Uppercase message sent:", result)
+
+# Close socket
+server.close()
+
+
+client -------->
+
+import socket
+
+# Create UDP socket
+client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# Take input from user
+message = input("Enter a lowercase string: ")
+
+# Send message to server
+client.sendto(message.encode(), ("127.0.0.1", 5000))
+
+# Receive response from server
+data, addr = client.recvfrom(1024)
+
+print("Uppercase message from server:", data.decode())
+
+# Close socket
+client.close()
+
+
+
+
+
+------------------subnet config------------------------
+outer(config-if)#end
+Router#
+%SYS-5-CONFIG_I: Configured from console by console
+Router#enable
+Router#configure terminal
+Enter configuration commands, one per line. End with CNTL/Z.
+Router(config)#interface GigabitEthernet 0/0
+Router(config-if)#ip address 192.168.10.3 255.255.255.128
+Router(config-if)#no shutdown
+Router(config-if)#exit
+Router(config)#interface GigabitEthernet 0/1
+Router(config-if)#ip address 192.168.11.3 255.255.255.128
+Router(config-if)#no shutdown
+Router(config-if)#end
+Router#
+%SYS-5-CONFIG_I: Configured from console by console
+Router#
+Router#show ip interface breif
+^
+% Invalid input detected at '^' marker.
+	
+Router#show ip interface brief
+Interface IP-Address OK? Method Status Protocol
+GigabitEthernet0/0 192.168.10.3 YES manual up up
+GigabitEthernet0/1 192.168.11.3 YES manual up up
+GigabitEthernet0/2 unassigned YES unset administratively down down
+Vlan1 unassigned YES unset administratively down down
+Router#show ip route
+Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
+D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area
+N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP
+i - IS-IS, L1 - IS-IS level-1, L2 - IS-IS level-2, ia - IS-IS inter area
+* - candidate default, U - per-user static route, o - ODR
+P - periodic downloaded static route
+Gateway of last resort is not set
+192.168.10.0/24 is variably subnetted, 2 subnets, 2 masks
+C 192.168.10.0/25 is directly connected, GigabitEthernet0/0
+L 192.168.10.3/32 is directly connected, GigabitEthernet0/0
+192.168.11.0/24 is variably subnetted, 2 subnets, 2 masks
+C 192.168.11.0/25 is directly connected, GigabitEthernet0/1
+L 192.168.11.3/32 is directly connected, GigabitEthernet0/1
+Router#
+Router#
